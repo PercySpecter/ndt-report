@@ -2,10 +2,10 @@
   "name": "ndt-report",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "nodemon index.js"
+    "start": "node app.js",
+    "test": "nodemon app.js"
   },
   "repository": {
     "type": "git",
