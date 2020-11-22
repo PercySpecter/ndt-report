@@ -116,6 +116,18 @@ app.get('/api/view-report/:dirname/:filename', async (req, res) => {
   });
 });
 
+app.get('/api/download-report/:dirname/:filename', async (req, res) => {
+  const dir = req.params.dirname;
+  const file = req.params.filename;
+  const path = 'reports/' + dir + "/" + file;
+
+  res.download(path, (err) => {
+    if (err) {
+      console.log(err);
+    }
+  });
+});
+
 app.delete('/api/delete-report/:dirname/:filename', async (req, res) => {
   const dir = req.params.dirname;
   const file = req.params.filename;
