@@ -107,13 +107,34 @@ app.post('/api/query-report', bodyParser, (req, res) => {
 
 
 app.get('/api/view-report/:dirname/:filename', async (req, res) => {
-  const form = new formidable.IncomingForm();
+  const dir = req.params.dirname;
+  const file = req.params.filename;
+  const path = 'reports/' + dir + "/" + file;
 
-  const path = 'reports/' + req.params.dirname + "/" + req.params.filename;
-
-  fs.readFile(path, function (err, data) {
+  fs.readFile(path, (err, data) => {
     res.contentType("application/pdf");
     res.send(data);
+  });
+});
+
+app.delete('/api/delete-report/:dirname/:filename', async (req, res) => {
+  const dir = req.params.dirname;
+  const file = req.params.filename;
+  const path = 'reports/' + dir + "/" + file;
+
+  fs.unlink(path, (err) => {
+    if (err) {
+      console.log(err);
+    }
+
+    let files = fs.readdirSync("reports/" + dir);
+    if (files.length == 0) {
+      fs.rmdir("reports/" + dir, () => {
+
+      });
+    }
+
+    res.sendStatus(200);
   });
 });
 
@@ -121,39 +142,3 @@ app.get('/api/view-report/:dirname/:filename', async (req, res) => {
 
 http.createServer(app).listen(app_port);
 console.log('Web server running at http://' + app_host + ':' + app_port);
-
-/*
-
-var http = require('http');
-var formidable = require('formidable');
-var fs = require('fs');
-var mv = require('mv');
-
-http.createServer(function (req, res) {
-  if (req.url == '/fileupload') {
-    var form = new formidable.IncomingForm();
-    form.parse(req, function (err, fields, files) {
-      var oldpath = files.report.path;
-      var newpath = 'reports/' + files.report.name;
-      mv(oldpath, newpath, function (err) {
-        if (err) throw err;
-        fs.readdir("reports/", (err, files) => {
-          files.forEach(file => {
-            console.log(file);
-          });
-        });
-        res.write('File uploaded and moved!');
-        res.end();
-      });
- });
-  } else {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write('<form action="fileupload" method="post" enctype="multipart/form-data">');
-    res.write('<input type="file" name="report"><br>');
-    res.write('<input type="submit">');
-    res.write('</form>');
-    return res.end();
-  }
-}).listen(8080);
-
-*/
