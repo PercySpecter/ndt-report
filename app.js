@@ -98,10 +98,12 @@ app.post('/api/query-report', bodyParser, async (req, res) => {
   let validFileList = [];
   await fs.readdir("reports/", (err, files) => {
     files.forEach(file => {
-      let currFile = file.split("_");
-      currFile[3] = "" + currFile[3].charAt(0);
-      if (isQueryResult(currFile, queryFile)) {
-        validFileList.push(file);
+      if (file != "dummy.txt") {
+        let currFile = file.split("_");
+        currFile[3] = "" + currFile[3].charAt(0);
+        if (isQueryResult(currFile, queryFile)) {
+          validFileList.push(file);
+        }
       }
     });
     res.send(validFileList);
