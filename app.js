@@ -34,34 +34,6 @@ const mv = require('mv');
  * Required Dependencies end
  */
 
-app.get('/api', (req, res) => {
-  const menuHtml = `<form  method="get">
-                      <button type="submit" formaction="/api/upload">Upload New Report</button>
-                      <button type="submit" formaction="/api/download">Download Old Report</button>
-                    </form>`;
-
-  res.send(menuHtml);
-});
-
-app.get('/api/upload', (req, res) => {
-  const formHtml = `<form action="/api/upload-pdf" method="post" enctype="multipart/form-data">
-                    <select id="station" name="station">
-                      <option value="bbgs">BBGS</option>
-                      <option value="sgs">SGS</option>
-                    </select>
-                    <input type="number" name="unit" placeholder="Unit Number">
-                    <input type="number" name="year" placeholder="Year">
-                    <select id="category" name="category">
-                      <option value="0">Survey</option>
-                      <option value="1">Breakdown</option>
-                      <option value="2">Preventive Maintenance</option>
-                    </select>
-                    <input type="file" name="report">
-                    <input type="submit" value="Upload Report">
-                    </form>`;
-
-  res.send(formHtml);
-});
 
 app.post('/api/upload-pdf', async (req, res) => {
   const form = new formidable.IncomingForm();
@@ -71,7 +43,7 @@ app.post('/api/upload-pdf', async (req, res) => {
     const year = fields.year;
     const category = fields.category;
     const oldpath = files.report.path;
-    const newpath = 'reports/' + (station+'_'+unit+'_'+year+'_'+category+'.pdf');
+    const newpath = 'reports/' + (station + '_' + unit + '_' + year + '_' + category + '.pdf');
     mv(oldpath, newpath, function (err) {
       if (err) throw err;
       fs.readdir("reports/", (err, files) => {
@@ -79,7 +51,9 @@ app.post('/api/upload-pdf', async (req, res) => {
           console.log(file);
         });
       });
-      res.send("File Uploaded Successfully");
+      const resultHtml = `Report Uploaded Successfully<br>
+                          <a href=${fields.callback}>Back</a>`;
+      res.send(resultHtml);
     });
   });
 });
@@ -98,45 +72,54 @@ app.get('/api/query', (req, res) => {
                       <option value="1">Breakdown</option>
                       <option value="2">Preventive Maintenance</option>
                     </select>
-                    <input type="submit" value="query Report">
+                    <input type="submit" value="Query Report">
                     </form>`;
 
   res.send(formHtml);
 });
 
+const isQueryResult = (currFile, queryFile) => {
+  for (let i = 0; i < 4; i++) {
+    if (queryFile[i] != "-1" && currFile[i] != queryFile[i]) {
+      return false;
+    }
+  }
+  return true;
+};
 
-app.post('/api/query-report', async (req, res) => {
-  const form = new formidable.IncomingForm();
-  form.parse(req, function (err, fields, files) {
-    const station = fields.station;
-    const unit = fields.unit;
-    const year = fields.year;
-    const category = fields.category;
-    const path = 'reports/' + (station+'_'+unit+'_'+year+'_'+category+'.pdf');
-    
-    res.download(path, (err) => {
-      if (err) 
-        res.send("Report Not Found");
+app.post('/api/query-report', bodyParser, async (req, res) => {
+  const queryFile = [
+    req.body.station,
+    req.body.unit,
+    req.body.year,
+    req.body.category
+  ];
+
+  let validFileList = [];
+  await fs.readdir("reports/", (err, files) => {
+    files.forEach(file => {
+      let currFile = file.split("_");
+      currFile[3] = "" + currFile[3].charAt(0);
+      if (isQueryResult(currFile, queryFile)) {
+        validFileList.push(file);
+      }
     });
+    res.send(validFileList);
   });
 });
 
 
-app.post('/api/download-pdf', async (req, res) => {
+app.get('/api/view-report/:filename', async (req, res) => {
   const form = new formidable.IncomingForm();
-  form.parse(req, function (err, fields, files) {
-    const station = fields.station;
-    const unit = fields.unit;
-    const year = fields.year;
-    const category = fields.category;
-    const path = 'reports/' + (station+'_'+unit+'_'+year+'_'+category+'.pdf');
-    
-    res.download(path, (err) => {
-      if (err) 
-        res.send("Report Not Found");
-    });
+
+  const path = 'reports/' + req.params.filename;
+
+  fs.readFile(path, function (err, data) {
+    res.contentType("application/pdf");
+    res.send(data);
   });
 });
+
 
 
 http.createServer(app).listen(app_port);
@@ -174,6 +157,6 @@ http.createServer(function (req, res) {
     res.write('</form>');
     return res.end();
   }
-}).listen(8080); 
+}).listen(8080);
 
 */
