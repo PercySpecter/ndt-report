@@ -34,7 +34,9 @@ const mv = require('mv');
  * Required Dependencies end
  */
 
-
+/**
+ * Upload PDF of report to repository
+ */
 app.post('/api/upload-pdf', async (req, res) => {
   const form = new formidable.IncomingForm();
   form.parse(req, function (err, fields, files) {
@@ -42,8 +44,13 @@ app.post('/api/upload-pdf', async (req, res) => {
     const unit = fields.unit;
     const year = fields.year;
     const category = fields.category;
+    const report_name = fields.report_name;
     const oldpath = files.report.path;
-    const newpath = 'reports/' + (station + '_' + unit + '_' + year + '_' + category + '.pdf');
+    const dir = 'reports/' + station + '_' + unit + '_' + year + '_' + category;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
+    const newpath = dir + '/' + report_name + '.pdf';
     mv(oldpath, newpath, function (err) {
       if (err) throw err;
       fs.readdir("reports/", (err, files) => {
@@ -58,26 +65,6 @@ app.post('/api/upload-pdf', async (req, res) => {
   });
 });
 
-
-app.get('/api/query', (req, res) => {
-  const formHtml = `<form action="/api/query-report" method="post" enctype="multipart/form-data">
-                    <select id="station" name="station">
-                      <option value="bbgs">BBGS</option>
-                      <option value="sgs">SGS</option>
-                    </select>
-                    <input type="number" name="unit" placeholder="Unit Number">
-                    <input type="number" name="year" placeholder="Year">
-                    <select id="category" name="category">
-                      <option value="0">Survey</option>
-                      <option value="1">Breakdown</option>
-                      <option value="2">Preventive Maintenance</option>
-                    </select>
-                    <input type="submit" value="Query Report">
-                    </form>`;
-
-  res.send(formHtml);
-});
-
 const isQueryResult = (currFile, queryFile) => {
   for (let i = 0; i < 4; i++) {
     if (queryFile[i] != "-1" && currFile[i] != queryFile[i]) {
@@ -87,7 +74,7 @@ const isQueryResult = (currFile, queryFile) => {
   return true;
 };
 
-app.post('/api/query-report', bodyParser, async (req, res) => {
+app.post('/api/query-report', bodyParser, (req, res) => {
   const queryFile = [
     req.body.station,
     req.body.unit,
@@ -95,26 +82,34 @@ app.post('/api/query-report', bodyParser, async (req, res) => {
     req.body.category
   ];
 
-  let validFileList = [];
-  await fs.readdir("reports/", (err, files) => {
-    files.forEach(file => {
-      if (file != "dummy.txt") {
-        let currFile = file.split("_");
-        currFile[3] = "" + currFile[3].charAt(0);
+  let validDirList = [];
+  fs.readdir("reports/", (err, dirs) => {
+    dirs.forEach(dir => {
+      if (dir != "dummy.txt") {
+        let currFile = dir.split("_");
+        currFile[3] = "" + currFile[3];
         if (isQueryResult(currFile, queryFile)) {
-          validFileList.push(file);
+          let validFileList = [];
+          let dirPath = "reports/" + dir;
+          console.log(dirPath);
+          let files = fs.readdirSync(dirPath);
+          files.forEach(file => {
+            console.log(file);
+            validFileList.push(file);
+          });
+          validDirList.push([dir, validFileList]);
         }
       }
     });
-    res.send(validFileList);
+    res.send(validDirList);
   });
 });
 
 
-app.get('/api/view-report/:filename', async (req, res) => {
+app.get('/api/view-report/:dirname/:filename', async (req, res) => {
   const form = new formidable.IncomingForm();
 
-  const path = 'reports/' + req.params.filename;
+  const path = 'reports/' + req.params.dirname + "/" + req.params.filename;
 
   fs.readFile(path, function (err, data) {
     res.contentType("application/pdf");
