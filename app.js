@@ -58,8 +58,7 @@ app.post('/api/upload-pdf', async (req, res) => {
           console.log(file);
         });
       });
-      const resultHtml = `Report Uploaded Successfully<br>
-                          <a href=${fields.callback}>Back</a>`;
+      const resultHtml = `<h1 style="color:green; font-family:sans-serif;">Report Uploaded Successfully</h1>`;
       res.send(resultHtml);
     });
   });
