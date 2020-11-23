@@ -1,4 +1,8 @@
-# ndt-report
+# NDT Report Repository API
+
+## Dependencies
+- **Node.js** : `version 10.19.0 or higher`
+- **npm** : `version 6.14.7 or higher`
 
 ## Deployment Instructions
 1. Clone the repository
