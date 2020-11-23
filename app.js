@@ -145,7 +145,7 @@ app.delete('/api/delete-report/:dirname/:filename', async (req, res) => {
       });
     }
 
-    res.sendStatus(200);
+    res.json({status: 0});
   });
 });
 
