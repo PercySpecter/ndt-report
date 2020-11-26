@@ -93,8 +93,10 @@ app.post('/api/query-report', bodyParser, (req, res) => {
           console.log(dirPath);
           let files = fs.readdirSync(dirPath);
           files.forEach(file => {
-            console.log(file);
-            validFileList.push(file);
+            let {birthtime} = fs.statSync(dirPath + "/" + file);
+            let time = birthtime.toTimeString().split(" ");
+            let dateTimeStr = birthtime.toDateString() + ", " + time[0];
+            validFileList.push([file, dateTimeStr]);
           });
           validDirList.push([dir, validFileList]);
         }
