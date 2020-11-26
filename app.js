@@ -73,6 +73,10 @@ const isQueryResult = (currFile, queryFile) => {
   return true;
 };
 
+const toTimeZoneString = (date, tzString) => {
+    return date.toLocaleString("en-GB", {timeZone: tzString});   
+};
+
 app.post('/api/query-report', bodyParser, (req, res) => {
   const queryFile = [
     req.body.station,
@@ -94,8 +98,7 @@ app.post('/api/query-report', bodyParser, (req, res) => {
           let files = fs.readdirSync(dirPath);
           files.forEach(file => {
             let {birthtime} = fs.statSync(dirPath + "/" + file);
-            let time = birthtime.toTimeString().split(" ");
-            let dateTimeStr = birthtime.toDateString() + ", " + time[0];
+            let dateTimeStr = toTimeZoneString(birthtime , "Asia/Kolkata");
             validFileList.push([file, dateTimeStr]);
           });
           validDirList.push([dir, validFileList]);
