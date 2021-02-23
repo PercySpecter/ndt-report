@@ -15,7 +15,8 @@
    ```
     > npm i
    ```
-3. Run the Server
+3. The API server runs on port 8080 by default. This can be changed by creating a .env file in the project directory and setting `app_port` variable with desired port.
+4. Run the Server
    ```
    > npm start
    ```
